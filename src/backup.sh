@@ -40,7 +40,10 @@ function print_blue() {
 }
 
 #Checks to see if there is at least 1 command line argument, if there is not, then exit and print $USAGE
-USAGE='Usage.. backup.sh Backup_Location Backup_Name Home_Dir'
+USAGE='\nUsage.. backup.sh [Location] [Name] [Days Old]\n
+Location:\tLocation of the local backup source\n
+Name:\t\tName of the backup source\n
+Days Old:\tAmount of days before old backups are deleted (10 default)'
 [[ $# -lt 1 ]] && print_error $USAGE && exit
 
 ### Parse Options ###
