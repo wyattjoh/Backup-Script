@@ -2,8 +2,8 @@ readme.txt: Backup-Script
  
 Wyatt Johnson 2011
 
-Usage.. backup.sh [Location] [Name] [Days Old]\n
+Usage: backup.sh [Location] [Name] [Days Old]
 
-Location:	Location of the local backup source\n
-Name:		Name of the backup source\n
+Location:	Location of the local backup source
+Name:		Name of the backup source
 Days Old:	Amount of days before old backups are deleted (10 default)
