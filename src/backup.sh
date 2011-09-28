@@ -15,23 +15,26 @@
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #!/bin/bash
 
-function echoerror() { echo "$@" 1>&2; }
+#	Wyatt's Handy Local Backup Script
+#	Version 1.10
 
-function print_error() {
+echoerror() { echo "$@" 1>&2; }
+
+print_error() {
   DATESTAMP="< $(date "+"%B" "%e", "%Y", "%r) > ERROR: "
 #  COLOR_RED_BOLD="$(tty -s && tput bold)""$(tty -s && tput setaf 1)"
 #  COLOR_RESET="$(tty -s && tput sgr0)"
 #  printf $COLOR_RED_BOLD"$DATESTAMP""$*"$COLOR_RESET" \n"
   printf "$DATESTAMP""$*""\n" 1>&2
 }
-function print_warning() {
+print_warning() {
   DATESTAMP="< $(date "+"%B" "%e", "%Y", "%r) > Warning: "
  # COLOR_YELLOW_BOLD="$(tty -s && tput bold)""$(tty -s && tput setaf 3)"
  # COLOR_RESET="$(tty -s && tput sgr0)"
  # printf $COLOR_YELLOW_BOLD"$DATESTAMP""$*"$COLOR_RESET" \n"
   printf "$DATESTAMP""$*""\n"
 }
-function print_blue() {
+print_blue() {
   DATESTAMP="[ $(date "+"%B" "%e", "%Y", "%r) ] "
 #  COLOR_BLUE="$(tty -s && tput setaf 4)"
 #  COLOR_RESET="$(tty -s && tput sgr0)"
@@ -142,30 +145,32 @@ fi
 }
 
 #	Start function declerations
-function verify() {	#	Added to verity the path to the $* directory before proceeding
+verify() {	#	Added to verity the path to the $* directory before proceeding
   [[ ! -e "$*" ]] && print_error "Folder $* does not exist" &&print_error $USAGE && exit
 }
-function gen_folder() {
+gen_folder() {
+go() {
+[[ ! -e "$1" ]] && mkdir -p "$1" && verify $1
+}
   for folder in $*;
   do
-    [[ ! -e "$folder" ]] && mkdir -p "$folder" && verify $folder
+    go $folder &
   done
+
+  wait
 }
-function gen_files() {
+gen_files() {
+go() {
+[[ ! -e "$1" ]] && touch "$1" && verify "$1"
+}
   for files in $*;
   do
-    [[ ! -e "$files" ]] && touch "$files" && verify $files
+    go $files &
   done
+
+  wait
 }
-function clean_files() {
-  for files in $*;
-  do
-    [[ ! -e "$files" ]] && continue
-    rm $files
-    gen_files $files
-  done
-}
-function restore_script() {
+restore_script() {
 
 cat > $UNTAR_SCRIPT_FILE <<EOF
     #!/bin/bash 
@@ -182,20 +187,20 @@ EOF
 
   chmod u=x $UNTAR_SCRIPT_FILE
 }
-function gen_prereq() {
+gen_prereq() {
   verify $HOME_DIR
   gen_folder $BACKUP_DIRECTORY_NAME_DATE
   gen_files $LOG_GLOBAL $LOG_LOCAL
   clean_files $INVENTORY $UNTAR_SCRIPT_FILE
   [[ ! -e "$UNTAR_SCRIPT_FILE" ]] && restore_script
 }
-function start_logging() {
+start_logging() {
   (print_blue "$NAME Backup: backup has started on $(date "+"%B" "%e", "%Y", "%r)" 2>&1) | tee -a "$LOG_GLOBAL" | tee -a "$LOG_LOCAL"
 }
-function end_log() {
+end_log() {
   (print_blue "$NAME Backup: $NAME backup has finished on $(date "+"%B" "%e", "%Y", "%r)" 2>&1) | tee -a "$LOG_GLOBAL" | tee -a "$LOG_LOCAL"
 }
-function cleanup_logs() {
+cleanup_logs() {
   for l in $*
   do
     TEMPFILE="/tmp/backup-"$$
@@ -213,21 +218,21 @@ function cleanup_logs() {
 	[[ -e "$TEMPFILE" ]] && rm $TEMPFILE
   done
 }
-function check_file_and_warn() {
+check_file_and_warn() {
   DATESTAMP=$(date "+"%B" "%e", "%Y", "%r)
   for files in "$@"
   do
     ([[ -e "$files" ]] && print_warning "$(basename $files) already exists, will override." && rm "$files" 2>&1) | tee -a "$LOG_GLOBAL" | tee -a "$LOG_LOCAL"
   done
 }
-function func_log() {
+func_log() {
   DATESTAMP=$(date "+"%B" "%e", "%Y", "%r)
   for log in "$@"
   do
     (print_blue "$log" 2>&1) | tee -a "$LOG_GLOBAL" | tee -a "$LOG_LOCAL"
   done
 }
-function inventory() {
+inventory() {
  DATESTAMP=$(date "+"%B" "%e", "%Y", "%r)
  IFS=$'\n'
  printf "File Listing of Backup Directory as of $DATESTAMP\n\n" > "$INVENTORY"
@@ -236,7 +241,7 @@ function inventory() {
 	echo -e "${files}" >> "$INVENTORY"
  done
 }
-function backup() {
+backup() {
   gen_prereq	# Generate the backups prerequisites
 
   start_logging &
@@ -249,10 +254,10 @@ function backup() {
   end_log
 
   cleanup_logs $LOG_LOCAL $LOG_GLOBAL &
-  chown -R $USER "$BACKUP_DIRECTORY"
+  chown -R $USER "$BACKUP_DIRECTORY" &
   wait
 }
-function clean_old_backups()	{
+clean_old_backups()	{
 find "$BACKUP_DIRECTORY_NAME" -depth -mtime +$Days_old -exec rm -R {} \;
 }
 
@@ -264,5 +269,5 @@ backup &
 clean_old_backups &
 
 wait    #   wait until all tasks are completed
-#	And Quit :)
-exit 0
+
+exit 0	#	And Quit :)
