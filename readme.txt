@@ -1,5 +1,7 @@
 readme.txt: Backup-Script 
  
+Background
+
 Wyatt Johnson 2011
 
 Usage: backup.sh [Location] [Name] [Days Old]
