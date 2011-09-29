@@ -279,25 +279,7 @@ backup() {
   wait
 }
 clean_old_backups()	{
-go() {
-for folders in `ls $BACKUP_DIRECTORY_NAME | sort`
-do
-year=(`echo "$folders" | cut -c 5-8`)
-day=(`echo "$folders" | cut -c 1-2`)
-month=(`echo "$folders" | cut -c 3-4`)
-dateserial="${year}${month}${day}"
-[[ ! $dateserial -gt 0 ]] && continue
-echo "$dateserial"
-done
-}
-
-c_dateserial=`date +%Y%m%d`
-
-for folders in `go | sort`
-do
-
-done
-
+find "$BACKUP_DIRECTORY_NAME" -depth -mtime +$Days_old -exec rm -R {} \;
 }
 
 #   Lock and ini
