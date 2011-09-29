@@ -145,6 +145,14 @@ fi
 }
 
 #	Start function declerations
+clean_files() {
+  for files in $*;
+  do
+    [[ ! -e "$files" ]] && continue
+    rm $files
+    gen_files $files
+  done
+}
 verify() {	#	Added to verity the path to the $* directory before proceeding
   [[ ! -e "$*" ]] && print_error "Folder $* does not exist" &&print_error $USAGE && exit
 }
