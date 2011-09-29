@@ -45,7 +45,7 @@ print_blue() {
 #Checks to see if there is at least 1 command line argument, if there is not, then exit and print $USAGE
 USAGE='\nUsage.. backup.sh [Location] [Name] [Days Old]\n
 Location:\tLocation of the local backup source\n
-Name:\t\tName of the backup source\n
+Name:\t\tName of the backup source (basename location default)\n
 Days Old:\tAmount of days before old backups are deleted (10 default)'
 [[ $# -lt 1 ]] && print_error $USAGE && exit
 
@@ -252,8 +252,6 @@ backup() {
   TAR_LOG=`tar -cjhf "$BACKUP_TAR_FILE" "$LOCATION"  2>&1`
   func_log "$TAR_LOG"
   end_log
-
-  cleanup_logs $LOG_LOCAL $LOG_GLOBAL &
   chown -R $USER "$BACKUP_DIRECTORY" &
   wait
 }
@@ -267,6 +265,7 @@ lock_ini
 #	And...... Backup!
 backup &
 clean_old_backups &
+cleanup_logs $LOG_LOCAL $LOG_GLOBAL &
 
 wait    #   wait until all tasks are completed
 
