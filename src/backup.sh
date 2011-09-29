@@ -56,7 +56,7 @@ LOCATION=${1}
 
 NAME=${2-$(basename $LOCATION)}
 
-Days_old=${3:=10}
+Days_old=${3:-10}
 ###	###	###
 
 #	Location of the TAR File and Log
