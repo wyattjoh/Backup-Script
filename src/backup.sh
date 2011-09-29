@@ -16,7 +16,7 @@
 #!/bin/bash
 
 #	Wyatt's Handy Local Backup Script
-#	Version 1.20
+#	Version 1.10
 
 echoerror() { echo "$@" 1>&2; }
 
@@ -56,7 +56,7 @@ LOCATION=${1}
 
 NAME=${2-$(basename $LOCATION)}
 
-Days_old=${3:=10}
+Days_old=${3:-10}
 ###	###	###
 
 #	Location of the TAR File and Log
@@ -217,36 +217,21 @@ cleanup_logs() {
 
     COUNTER=$(wc -l < "$l" )
     if [[ $COUNTER -gt "300" ]]; then
-      tail --lines=250 "$l" > TEMPFILE
+      tail --lines=100 "$l" > TEMPFILE
       mv TEMPFILE "$l"
       (print_warning "$LOGNAME $l Logfile Cleaned" 2>&1) | tee -a "$LOG_GLOBAL" | tee -a "$LOG_LOCAL"
       else
 	[[ -e "$TEMPFILE" ]] && rm $TEMPFILE
     fi
-	[[ -e "$TEMPFILE" ]] && rm $TEMPFILE && trap - INT TERM
+	[[ -e "$TEMPFILE" ]] && rm $TEMPFILE
   done
 }
-check_backup_and_warn() {
+check_file_and_warn() {
   DATESTAMP=$(date "+"%B" "%e", "%Y", "%r)
-  DATESTAMPS=$(date "+"%B" "%e)
-  old_IFS=$IFS
-  IFS=$'\n'
-
   for files in "$@"
   do
-  if [[ -e "$files" ]]; then
-    LOG_LINES=`cat $LOG_LOCAL`
-    FOUND=(`echo "${LOG_LINES[*]}" | grep "$DATESTAMPS"`)
-
-    if [[ "${#FOUND[*]}" -gt 0 ]]; then
-      (print_warning "$(basename $files) already exists, will override." && rm "$files" 2>&1) | tee -a "$LOG_GLOBAL" | tee -a "$LOG_LOCAL"
-    else
-      echo "$(basename $files) already exists and no logs were created... will stop for today." && exit
-    fi
-  fi
+    ([[ -e "$files" ]] && print_warning "$(basename $files) already exists, will override." && rm "$files" 2>&1) | tee -a "$LOG_GLOBAL" | tee -a "$LOG_LOCAL"
   done
-  
-  IFS=$old_IFS
 }
 func_log() {
   DATESTAMP=$(date "+"%B" "%e", "%Y", "%r)
@@ -266,10 +251,10 @@ inventory() {
 }
 backup() {
   gen_prereq	# Generate the backups prerequisites
-  check_backup_and_warn $BACKUP_TAR_FILE
 
   start_logging &
   inventory "$LOCATION*" &
+  check_file_and_warn $BACKUP_TAR_FILE &
   wait
 
   TAR_LOG=`tar -cjhf "$BACKUP_TAR_FILE" "$LOCATION"  2>&1`
