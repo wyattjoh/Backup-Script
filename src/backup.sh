@@ -16,9 +16,7 @@
 #!/bin/bash
 
 #	Wyatt's Handy Local Backup Script
-#	Version 1.20
-
-echoerror() { echo "$@" 1>&2; }
+#	Version 1.25
 
 print_error() {
   DATESTAMP="< $(date "+"%B" "%e", "%Y", "%r) > ERROR: "
@@ -48,29 +46,24 @@ Days Old:\tAmount of days before old backups are deleted (10 default)'
 [[ $# -lt 1 ]] && print_error $USAGE && exit
 
 ### Parse Options ###
-
-#What to backup?
-LOCATION=${1}
-
-NAME=${2-$(basename $LOCATION)}
-
-Days_old=${3:-10}
-###	###	###
+define LOCATION=${1}
+define NAME=${2-$(basename $LOCATION)}
+define Days_old=${3:-10}
 
 #	Location of the TAR File and Log
-HOME_DIR="$HOME"
-BACKUP_DIRECTORY="$HOME_DIR""/.backups"
-LOG_GLOBAL="$BACKUP_DIRECTORY""/""Backup_Log.txt"
-BACKUP_DIRECTORY_NAME="$BACKUP_DIRECTORY""/""$NAME"
-LOG_LOCAL="$BACKUP_DIRECTORY_NAME""/""$NAME""_Backup_Log.txt"
-BACKUP_DIRECTORY_NAME_DATE="$BACKUP_DIRECTORY_NAME""/""$(date +%d%m%Y)"
-BACKUP_TAR_NAME="$NAME""_""$(date +%d%m%Y)""_Backup.tar.bz2"
-BACKUP_TAR_FILE="$BACKUP_DIRECTORY_NAME_DATE""/""$BACKUP_TAR_NAME"
-INVENTORY="$BACKUP_DIRECTORY_NAME_DATE/File Listing.txt"
+define HOME_DIR="$HOME"
+define BACKUP_DIRECTORY="$HOME_DIR""/.backups"
+define LOG_GLOBAL="$BACKUP_DIRECTORY""/""Backup_Log.txt"
+define BACKUP_DIRECTORY_NAME="$BACKUP_DIRECTORY""/""$NAME"
+define LOG_LOCAL="$BACKUP_DIRECTORY_NAME""/""$NAME""_Backup_Log.txt"
+define BACKUP_DIRECTORY_NAME_DATE="$BACKUP_DIRECTORY_NAME""/""$(date +%d%m%Y)"
+define BACKUP_TAR_NAME="$NAME""_""$(date +%d%m%Y)""_Backup.tar.bz2"
+define BACKUP_TAR_FILE="$BACKUP_DIRECTORY_NAME_DATE""/""$BACKUP_TAR_NAME"
+define INVENTORY="$BACKUP_DIRECTORY_NAME_DATE/File Listing.txt"
 
 
 #	The Untar Bash Script preparations
-UNTAR_SCRIPT_FILE="$BACKUP_DIRECTORY_NAME_DATE""/Restore_Backup.sh"
+define UNTAR_SCRIPT_FILE="$BACKUP_DIRECTORY_NAME_DATE""/Restore_Backup.sh"
 
 lock_ini() {
 ##################################################
