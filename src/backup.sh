@@ -22,24 +22,22 @@ echoerror() { echo "$@" 1>&2; }
 
 print_error() {
   DATESTAMP="< $(date "+"%B" "%e", "%Y", "%r) > ERROR: "
-#  COLOR_RED_BOLD="$(tty -s && tput bold)""$(tty -s && tput setaf 1)"
-#  COLOR_RESET="$(tty -s && tput sgr0)"
-#  printf $COLOR_RED_BOLD"$DATESTAMP""$*"$COLOR_RESET" \n"
-  printf "$DATESTAMP""$*""\n" 1>&2
+  printf "$DATESTAMP""$*""\n" 1>&2 | tee -a "$LOG_GLOBAL" | tee -a "$LOG_LOCAL"
 }
 print_warning() {
   DATESTAMP="< $(date "+"%B" "%e", "%Y", "%r) > Warning: "
- # COLOR_YELLOW_BOLD="$(tty -s && tput bold)""$(tty -s && tput setaf 3)"
- # COLOR_RESET="$(tty -s && tput sgr0)"
- # printf $COLOR_YELLOW_BOLD"$DATESTAMP""$*"$COLOR_RESET" \n"
-  printf "$DATESTAMP""$*""\n"
+  printf "$DATESTAMP""$*""\n" | tee -a "$LOG_GLOBAL" | tee -a "$LOG_LOCAL"
 }
-print_blue() {
+print_execute() {
+fct="$(eval $@)"
+if [[ ! -z "$fct" ]]; then
+DATESTAMP="< $(date "+"%B" "%e", "%Y", "%r) > Command: "
+printf "$DATESTAMP$fct\n" | tee -a "$LOG_GLOBAL" | tee -a "$LOG_LOCAL"
+fi
+}
+print_log() {
   DATESTAMP="[ $(date "+"%B" "%e", "%Y", "%r) ] "
-#  COLOR_BLUE="$(tty -s && tput setaf 4)"
-#  COLOR_RESET="$(tty -s && tput sgr0)"
-#  printf $COLOR_BLUE"$DATESTAMP""$*"$COLOR_RESET" \n"
-  printf "$DATESTAMP""$*""\n"
+  printf "$DATESTAMP""$*""\n" | tee -a "$LOG_GLOBAL" | tee -a "$LOG_LOCAL"
 }
 
 #Checks to see if there is at least 1 command line argument, if there is not, then exit and print $USAGE
@@ -154,7 +152,7 @@ clean_files() {
   done
 }
 verify() {	#	Added to verity the path to the $* directory before proceeding
-  [[ ! -e "$*" ]] && print_error "Folder $* does not exist" &&print_error $USAGE && exit
+  [[ ! -e "$*" ]] && print_error "Folder $* does not exist" && print_error $USAGE && exit
 }
 gen_folder() {
 go() {
@@ -203,10 +201,10 @@ gen_prereq() {
   [[ ! -e "$UNTAR_SCRIPT_FILE" ]] && restore_script
 }
 start_logging() {
-  (print_blue "$NAME Backup: backup has started on $(date "+"%B" "%e", "%Y", "%r)" 2>&1) | tee -a "$LOG_GLOBAL" | tee -a "$LOG_LOCAL"
+  print_log "$NAME Backup: backup has started on $(date "+"%B" "%e", "%Y", "%r)"
 }
 end_log() {
-  (print_blue "$NAME Backup: $NAME backup has finished on $(date "+"%B" "%e", "%Y", "%r)" 2>&1) | tee -a "$LOG_GLOBAL" | tee -a "$LOG_LOCAL"
+  print_log "$NAME Backup: $NAME backup has finished on $(date "+"%B" "%e", "%Y", "%r)"
 }
 cleanup_logs() {
   for l in $*
@@ -219,8 +217,8 @@ cleanup_logs() {
     if [[ $COUNTER -gt "300" ]]; then
       tail --lines=250 "$l" > TEMPFILE
       mv TEMPFILE "$l"
-      (print_warning "$LOGNAME $l Logfile Cleaned" 2>&1) | tee -a "$LOG_GLOBAL" | tee -a "$LOG_LOCAL"
-      else
+      print_warning "$LOGNAME $l Logfile Cleaned"
+else
 	[[ -e "$TEMPFILE" ]] && rm $TEMPFILE
     fi
 	[[ -e "$TEMPFILE" ]] && rm $TEMPFILE && trap - INT TERM
@@ -239,7 +237,8 @@ check_backup_and_warn() {
     FOUND=(`echo "${LOG_LINES[*]}" | grep "$DATESTAMPS"`)
 
     if [[ "${#FOUND[*]}" -gt 0 ]]; then
-      (print_warning "$(basename $files) already exists, will override." && rm "$files" 2>&1) | tee -a "$LOG_GLOBAL" | tee -a "$LOG_LOCAL"
+      print_warning "$(basename $files) already exists, will override."
+      print_execute 'rm $files'
     else
       echo "$(basename $files) already exists and no logs were created... will stop for today." && exit
     fi
@@ -247,13 +246,6 @@ check_backup_and_warn() {
   done
   
   IFS=$old_IFS
-}
-func_log() {
-  DATESTAMP=$(date "+"%B" "%e", "%Y", "%r)
-  for log in "$@"
-  do
-    (print_blue "$log" 2>&1) | tee -a "$LOG_GLOBAL" | tee -a "$LOG_LOCAL"
-  done
 }
 inventory() {
  DATESTAMP=$(date "+"%B" "%e", "%Y", "%r)
@@ -272,8 +264,7 @@ backup() {
   inventory "$LOCATION*" &
   wait
 
-  TAR_LOG=`tar -cjhf "$BACKUP_TAR_FILE" "$LOCATION"  2>&1`
-  func_log "$TAR_LOG"
+  print_execute "tar -cjhf $BACKUP_TAR_FILE $LOCATION  2>&1"
   end_log
   chown -R $USER "$BACKUP_DIRECTORY" &
   wait
