@@ -46,24 +46,24 @@ Days Old:\tAmount of days before old backups are deleted (10 default)'
 [[ $# -lt 1 ]] && print_error $USAGE && exit
 
 ### Parse Options ###
-define LOCATION=${1}
-define NAME=${2-$(basename $LOCATION)}
-define Days_old=${3:-10}
+readonly LOCATION=${1}
+readonly NAME=${2-$(basename $LOCATION)}
+readonly Days_old=${3:-10}
 
 #	Location of the TAR File and Log
-define HOME_DIR="$HOME"
-define BACKUP_DIRECTORY="$HOME_DIR""/.backups"
-define LOG_GLOBAL="$BACKUP_DIRECTORY""/""Backup_Log.txt"
-define BACKUP_DIRECTORY_NAME="$BACKUP_DIRECTORY""/""$NAME"
-define LOG_LOCAL="$BACKUP_DIRECTORY_NAME""/""$NAME""_Backup_Log.txt"
-define BACKUP_DIRECTORY_NAME_DATE="$BACKUP_DIRECTORY_NAME""/""$(date +%d%m%Y)"
-define BACKUP_TAR_NAME="$NAME""_""$(date +%d%m%Y)""_Backup.tar.bz2"
-define BACKUP_TAR_FILE="$BACKUP_DIRECTORY_NAME_DATE""/""$BACKUP_TAR_NAME"
-define INVENTORY="$BACKUP_DIRECTORY_NAME_DATE/File Listing.txt"
+readonly HOME_DIR="$HOME"
+readonly BACKUP_DIRECTORY="$HOME_DIR""/.backups"
+readonly LOG_GLOBAL="$BACKUP_DIRECTORY""/""Backup_Log.txt"
+readonly BACKUP_DIRECTORY_NAME="$BACKUP_DIRECTORY""/""$NAME"
+readonly LOG_LOCAL="$BACKUP_DIRECTORY_NAME""/""$NAME""_Backup_Log.txt"
+readonly BACKUP_DIRECTORY_NAME_DATE="$BACKUP_DIRECTORY_NAME""/""$(date +%d%m%Y)"
+readonly BACKUP_TAR_NAME="$NAME""_""$(date +%d%m%Y)""_Backup.tar.bz2"
+readonly BACKUP_TAR_FILE="$BACKUP_DIRECTORY_NAME_DATE""/""$BACKUP_TAR_NAME"
+readonly INVENTORY="$BACKUP_DIRECTORY_NAME_DATE/File Listing.txt"
 
 
 #	The Untar Bash Script preparations
-define UNTAR_SCRIPT_FILE="$BACKUP_DIRECTORY_NAME_DATE""/Restore_Backup.sh"
+readonly UNTAR_SCRIPT_FILE="$BACKUP_DIRECTORY_NAME_DATE""/Restore_Backup.sh"
 
 lock_ini() {
 ##################################################
